@@ -43,7 +43,7 @@ map<string, FileData> fileList;
 ThreadPool threadPool(readFile, threadReport);
 
 // queue of files to be read
-queue<std::experimental::filesystem::directory_entry> files;
+queue<std::filesystem::directory_entry> files;
 
 // barrier related variables
 unsigned barrierThreshold = 10;
@@ -111,8 +111,8 @@ void getFiles(wstring path) {
 	barrier();
 
 	// loop through the directory and add files to the queue, if there is nothing we default to text files
-	for (const auto& dirEntry : std::experimental::filesystem::recursive_directory_iterator(path)) {
-		wstring ext = std::experimental::filesystem::path(dirEntry.path()).extension().wstring();
+	for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(path)) {
+		wstring ext = std::filesystem::path(dirEntry.path()).extension().wstring();
 		if (extensions.size() == 0) {
 			if (ext == L".txt") {
 				files.push(dirEntry);
@@ -152,7 +152,7 @@ void readFile() {
 		while (!files.empty()) {
 
 			//dclp to ensure the thread avoids race conditions when popping a file off the queue
-			std::experimental::filesystem::directory_entry file;
+			std::filesystem::directory_entry file;
 			bool haveTask = false;
 
 			{
@@ -166,7 +166,7 @@ void readFile() {
 
 			if (haveTask) {
 				if (verbose) {
-					cout << "thread [" << this_thread::get_id() << "]  starting grep of: " << file << endl;
+					cout << "thread [" << this_thread::get_id() << "]  starting grep of: " << file.path().c_str() << endl;
 				}
 
 				// temp filedata object to store file data for this threads file
@@ -187,7 +187,7 @@ void readFile() {
 							for (auto x : match) {
 								matchCount++;
 								if (verbose) {
-									wcout << "thread [" << this_thread::get_id() << "] matched " << matchCount << ": " << file << " on line [" << lineCount << "] " << line << endl;
+									wcout << "thread [" << this_thread::get_id() << "] matched " << matchCount << ": " << file.path().c_str() << " on line [" << lineCount << "] " << line << endl;
 								}
 								LineData tempLine(lineCount, matchCount, line);
 								tempFd.match_data.push_back(tempLine);
@@ -246,7 +246,7 @@ int ultragrep::execute() {
 		wstring arg1 = get_args()[1];
 		if (verboseCheck(arg1)) {
 			verbose = true;
-			if (std::experimental::filesystem::exists(get_args()[2])) {
+			if (std::filesystem::exists(get_args()[2])) {
 				directory = get_args()[2];
 			}
 			else {
@@ -261,7 +261,7 @@ int ultragrep::execute() {
 			getFiles(directory);
 		}
 		else {
-			if (std::experimental::filesystem::exists(get_args()[1])) {
+			if (std::filesystem::exists(get_args()[1])) {
 				directory = get_args()[1];
 			}
 			else {
